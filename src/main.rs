@@ -9,13 +9,14 @@ use opengl_graphics::{GlGraphics, OpenGL};
 
 mod app;
 mod board;
+mod tile;
 
 fn main() {
 
 
     let opengl = OpenGL::V3_2;
 
-    let mut window: PistonWindow<GlutinWindow> = WindowSettings::new("Minesweeper", [640, 640]).exit_on_esc(true).build().unwrap();
+    let mut window: PistonWindow<GlutinWindow> = WindowSettings::new("Minesweeper", [480, 480]).exit_on_esc(true).build().unwrap();
     let mut gl = GlGraphics::new(opengl);
     let mut app = app::App {
         window_bg_color: [0.9, 0.9, 0.9, 1.0],

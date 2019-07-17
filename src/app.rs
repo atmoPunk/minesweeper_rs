@@ -13,10 +13,9 @@ impl App {
         let ref c = Context::new_abs(args.window_size[0] as f64, args.window_size[1] as f64);
 
         let w_bg_col = self.window_bg_color;
-        println!("color: {:?}", w_bg_col);
         gl.draw(args.viewport(), |_, gl| {
             clear(w_bg_col, gl);
-            self.board.render_board(c, gl)
+            self.board.render(c, gl)
         });
     }
 
