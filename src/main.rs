@@ -21,7 +21,8 @@ fn main() {
     let mut app = app::App {
         window_bg_color: [0.9, 0.9, 0.9, 1.0],
         board: board::Board::new(10, 10),
-        counter: 0.0
+        counter: 0.0,
+        mouse_pos: [0.0, 0.0]
     };
     while let Some(e) = window.next() {
         if let Some(ref r_args) = e.render_args() {
@@ -30,6 +31,19 @@ fn main() {
 
         if let Some(ref u_args) = e.update_args() {
             app.update(u_args);
+        }
+
+        if let Some(ref press_args) = e.press_args() {
+            use piston_window::Button::Mouse;
+            // use piston_window::MouseButton;
+            if *press_args == Mouse(MouseButton::Left) {
+                println!("mouse clicked!");
+                app.mouse_click();
+            }
+        }
+        if let Some(ref mouse_args) = e.mouse_cursor_args() {
+            // println!("mouse_moved to {}, {}", mouse_args[0], mouse_args[1]);
+            app.mouse_move(mouse_args);
         }
     }
 }

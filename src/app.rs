@@ -6,6 +6,7 @@ pub struct App {
     pub window_bg_color: [f32; 4],
     pub board: Board,
     pub counter: f64,
+    pub mouse_pos: [f64; 2],
 }
 
 impl App {
@@ -21,5 +22,13 @@ impl App {
 
     pub fn update(&mut self, args: &UpdateArgs) {
         self.counter += args.dt;
+    }
+
+    pub fn mouse_move(&mut self, args: &[f64; 2]) {
+        self.mouse_pos = *args;
+    }
+
+    pub fn mouse_click(&mut self) {
+        self.board.mouse_click(&self.mouse_pos);
     }
 }
