@@ -2,6 +2,7 @@ use piston_window::*;
 use rand::random;
 use opengl_graphics::GlGraphics;
 use crate::tile::Tile;
+use std::path::Path;
 
 pub struct Board {
     tiles: Vec::<Tile>,
@@ -10,6 +11,7 @@ pub struct Board {
     width: i32,
     height_real: f64,
     width_real: f64,
+    textures: Vec<opengl_graphics::Texture>
 }
 
 const PADDING: f64 = 5.0;
@@ -31,14 +33,12 @@ impl Board {
                 tile.width = tile_width - LINE;
                 tile.pos_x_real = PADDING + x as f64 * tile_width + LINE;
                 tile.pos_y_real = PADDING + y as f64 * tile_height + LINE;
-                // tiles[(y * board_width + x) as usize].pos_x = x;
-                // tiles[(y * board_width + x) as usize].pos_y = y;
-                // tiles[(y * board_width + x) as usize].tile_height = tile_height;
-                // tiles[(y * board_width + x) as usize].tile_width = tile_width;
-        //         tiles[(y * board_width + x) as usize].pos_x_real = PADDING + self.pos_x as f64 * tile_width + LINE;
-        // let pos_real_y = PADDING + self.pos_y as f64 * tile_height + LINE;
-
             }
+        }
+        let mut text_vec: Vec<opengl_graphics::Texture> = Vec::with_capacity(9);
+                let text_settings = opengl_graphics::TextureSettings::new();
+        for i in 0 .. 9 {
+            text_vec.push(opengl_graphics::Texture::from_path(Path::new(&format!("assets/tile_{}.png", i)), &text_settings).unwrap());
         }
         let mine_count = height * width / 10;
         let mut current_mine_count = 0;
@@ -52,7 +52,7 @@ impl Board {
                 current_mine_count += 1;
             }
         }
-        Board { tiles, mine_count, height, width, height_real, width_real }
+        Board { tiles, mine_count, height, width, height_real, width_real, textures: text_vec }
     }
 
     fn get_tile(&self, x: i32, y: i32) -> Option<&Tile> {
@@ -87,18 +87,26 @@ impl Board {
         let color: [f32; 4] = [0.5, 0.5, 0.5, 1.0];
         let position: [f64; 4] = [PADDING, PADDING, self.height_real, self.width_real];
         Rectangle::new(color).draw(position, &DrawState::default(), c.transform, gl);
-
-
         
         for tile in self.tiles.iter() {
-            tile.render(c, gl);
+            let t_color = self.get_tile_color(tile);
+            tile.render(c, gl, t_color.0, t_color.1);
         }
+    }
+
+    fn get_tile_color(&self, tile: &Tile) -> (&opengl_graphics::Texture, i32) {
+        let mc = self.neighbor_mine_count(tile.pos_x, tile.pos_y);
+       
+        (&self.textures[mc as usize], mc)
     }
 
     fn neighbor_mine_count(&self, x: i32, y: i32) -> i32 {
         let mut counter = 0;
         for dx in -1 .. 2 {
             for dy in -1 .. 2 {
+                if dx == 0 && dy == 0 {
+                    continue;
+                }
                 match self.get_tile(x + dx, y + dy) {
                     Some(tile) => {
                         counter += tile.is_mine as i32;
