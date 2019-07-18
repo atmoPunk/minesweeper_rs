@@ -17,11 +17,11 @@ fn main() {
 
     let opengl = OpenGL::V3_2;
 
-    let mut window: PistonWindow<GlutinWindow> = WindowSettings::new("Minesweeper", [480, 480]).exit_on_esc(true).build().unwrap();
+    let mut window: PistonWindow<GlutinWindow> = WindowSettings::new("Minesweeper", [480, 480]).exit_on_esc(true).resizable(false).build().unwrap();
     let mut gl = GlGraphics::new(opengl);
     let mut app = app::App {
         window_bg_color: [0.9, 0.9, 0.9, 1.0],
-        board: board::Board::new(10, 10),
+        board: board::Board::new(16, 16),
         counter: 0.0,
         mouse_pos: [0.0, 0.0]
     };
