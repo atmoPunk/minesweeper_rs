@@ -35,11 +35,12 @@ impl Board {
                 tile.pos_y_real = PADDING + y as f64 * tile_height + LINE;
             }
         }
-        let mut text_vec: Vec<opengl_graphics::Texture> = Vec::with_capacity(9);
+        let mut text_vec: Vec<opengl_graphics::Texture> = Vec::with_capacity(10);
                 let text_settings = opengl_graphics::TextureSettings::new();
         for i in 0 .. 9 {
             text_vec.push(opengl_graphics::Texture::from_path(Path::new(&format!("assets/tile_{}.png", i)), &text_settings).unwrap());
         }
+        text_vec.push(opengl_graphics::Texture::from_path(Path::new("assets/mark.png"), &text_settings).unwrap());
         let mine_count = height * width / 10;
         let mut current_mine_count = 0;
         while current_mine_count < mine_count {
@@ -71,6 +72,17 @@ impl Board {
         }
     }
 
+    fn get_tile_real(&self, x: f64, y: f64) -> Option<&Tile> {
+        for tile in self.tiles.iter() {
+            if x >= tile.pos_x_real && x <= tile.pos_x_real + tile.width {
+                if y >= tile.pos_y_real && y <= tile.pos_y_real + tile.height {
+                    return Some(tile);
+                }
+            }
+        }
+        None
+    }
+
     fn get_tile_real_mut(&mut self, x: f64, y: f64) -> Option<&mut Tile> {
         for tile in self.tiles.iter_mut() {
             if x >= tile.pos_x_real && x <= tile.pos_x_real + tile.width {
@@ -89,15 +101,13 @@ impl Board {
         Rectangle::new(color).draw(position, &DrawState::default(), c.transform, gl);
         
         for tile in self.tiles.iter() {
-            let t_color = self.get_tile_color(tile);
-            tile.render(c, gl, t_color.0, t_color.1);
+            let mc = self.get_tile_mines(tile);
+            tile.render(c, gl, mc, &self.textures);
         }
     }
 
-    fn get_tile_color(&self, tile: &Tile) -> (&opengl_graphics::Texture, i32) {
-        let mc = self.neighbor_mine_count(tile.pos_x, tile.pos_y);
-       
-        (&self.textures[mc as usize], mc)
+    fn get_tile_mines(&self, tile: &Tile) -> i32 {
+        self.neighbor_mine_count(tile.pos_x, tile.pos_y)
     }
 
     fn neighbor_mine_count(&self, x: i32, y: i32) -> i32 {
@@ -118,45 +128,50 @@ impl Board {
         counter
     }
 
-    pub fn mouse_click(&mut self, mouse_pos: &[f64; 2]) {
-        let mouse_x = mouse_pos[0];
-        let mouse_y = mouse_pos[1];
-        let px;
-        let py;
-        let mut on = false;
-        match self.get_tile_real_mut(mouse_x, mouse_y) {
-            Some(tile) => {
-                // tile.open();
-                px = tile.pos_x;
-                py = tile.pos_y;
-                on = true;
-            },
-            None => {
-                px = -1;
-                py = -1;
+    pub fn check_win_condition(&self) -> bool {
+        let mut win = true;
+        for tile in self.tiles.iter() {
+            if (tile.is_marked && !tile.is_mine) || (!tile.is_marked && tile.is_mine) {
+                win = false;
             }
         }
-        if on {
-            self.open_neighbors(px, py);
-        }
+        win
     }
 
-    pub fn open_neighbors(&mut self, x: i32, y: i32) {
+    pub fn mouse_click(&mut self, mouse_pos: &[f64; 2]) -> bool {
+        let open_mine;
+        match self.get_tile_real(mouse_pos[0], mouse_pos[1]) {
+            Some(tile) => {
+                open_mine = self.open_neighbors(tile.pos_x, tile.pos_y);
+            },
+            None => { open_mine = false; }
+        }
+        open_mine
+    }
+
+    pub fn right_click(&mut self, mouse_pos: &[f64; 2]) -> bool {
+        match self.get_tile_real_mut(mouse_pos[0], mouse_pos[1]) {
+            Some(tile) => {
+                tile.mark();
+            },
+            None => {}
+        };
+        self.check_win_condition()
+    }
+
+    pub fn open_neighbors(&mut self, x: i32, y: i32) -> bool {
         self.get_tile_mut(x, y).unwrap().open();
+        if self.get_tile(x, y).unwrap().is_mine {
+            return true;
+        }
         let mine_c = self.neighbor_mine_count(x, y);
-        println!("tile: {}, {}, mc: {}", x, y, mine_c);
         if mine_c == 0 {
             for dx in -1 .. 2 {
                 for dy in -1 .. 2 {
-                    println!("{}, {}", dx, dy);
                     match self.get_tile(x + dx, y + dy) {
-                        
                         Some(tile) => {
-                            println!("trying: {}, {}", x+dx, y+dy);
-
                             if !tile.is_open {
-                                println!("opening");
-                                self.open_neighbors(x + dx, y + dy)
+                                self.open_neighbors(x + dx, y + dy);
                             }
                         },
                         None => {
@@ -165,5 +180,6 @@ impl Board {
                 }
             }
         }
+        false
     }
 }

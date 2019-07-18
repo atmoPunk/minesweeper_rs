@@ -28,7 +28,21 @@ impl App {
         self.mouse_pos = *args;
     }
 
-    pub fn mouse_click(&mut self) {
-        self.board.mouse_click(&self.mouse_pos);
+    pub fn mouse_click(&mut self) -> bool {
+        if self.board.mouse_click(&self.mouse_pos) {
+            println!("YOU LOSE!");
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn right_click(&mut self) -> bool {
+        if self.board.right_click(&self.mouse_pos) {
+            println!("YOU WIN!");
+            true
+        } else {
+            false
+        }
     }
 }

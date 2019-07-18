@@ -6,6 +6,7 @@ extern crate rand;
 use piston_window::*;
 use glutin_window::GlutinWindow;
 use opengl_graphics::{GlGraphics, OpenGL};
+use std::thread;
 
 mod app;
 mod board;
@@ -37,8 +38,15 @@ fn main() {
             use piston_window::Button::Mouse;
             // use piston_window::MouseButton;
             if *press_args == Mouse(MouseButton::Left) {
-                println!("mouse clicked!");
-                app.mouse_click();
+                if app.mouse_click() {
+                    window.set_should_close(true);
+                }
+            }
+
+            if *press_args == Mouse(MouseButton::Right) {
+                if app.right_click() {
+                    window.set_should_close(true);
+                }
             }
         }
         if let Some(ref mouse_args) = e.mouse_cursor_args() {
